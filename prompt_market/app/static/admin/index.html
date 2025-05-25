@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Market 管理页面</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">    <link rel="stylesheet" href="/admin/admin.css">    <style>
+        body {
+            padding-top: 20px;
+            padding-bottom: 50px;
+        }
+        .tab-pane {
+            padding: 20px 0;
+        }
+        .prompt-card {
+            margin-bottom: 20px;
+            border-left: 5px solid #6c757d;
+        }
+        .prompt-card.pending {
+            border-left-color: #ffc107;
+        }
+        .prompt-card.approved {
+            border-left-color: #28a745;
+        }
+        .prompt-card.rejected {
+            border-left-color: #dc3545;
+        }
+        .prompt-actions {
+            text-align: right;
+        }
+        .prompt-content {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+        .prompt-details {
+            display: none; /* 默认隐藏详细内容 */
+        }
+        .details-toggle {
+            cursor: pointer;
+            color: #0d6efd;
+        }
+        .details-toggle:hover {
+            text-decoration: underline;
+        }
+        .badge-tag {
+            margin-right: 5px;
+        }
+        .stats-box {
+            text-align: center;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .stats-box h2 {
+            font-size: 2.5rem;
+            margin: 0;
+        }
+        .stats-box p {
+            margin: 5px 0 0;
+            opacity: 0.8;
+        }
+        .bg-pending {
+            background-color: #fff3cd;
+        }
+        .bg-approved {
+            background-color: #d1e7dd;
+        }
+        .bg-rejected {
+            background-color: #f8d7da;
+        }
+        /* 新增标签输入组件样式 */
+        .tags-input-container-admin {
+            display: flex;
+            flex-direction: column; /* 让输入框和标签容器垂直排列 */
+            border: 1px solid #ced4da;
+            padding: .375rem .75rem;
+            border-radius: .25rem;
+        }
+        .tags-input-container-admin input[type="text"] {
+            border: none;
+            outline: none;
+            flex-grow: 1;
+            padding: 0.25rem 0; /* 调整内边距 */
+            margin-bottom: 5px; 
+        }
+        .tags-input-container-admin input[type="text"]:focus {
+            box-shadow: none;
+        }
+        .tags-container-admin {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px; /* 标签之间的间距 */
+        }
+        .tag-badge-admin {
+            background-color: #0dcaf0; /* Bootstrap info color */
+            color: white;
+            padding: 5px 8px; /* 调整内边距 */
+            border-radius: 4px; /* 更扁平的圆角 */
+            display: flex;
+            align-items: center;
+            font-size: 0.85em; /* 稍小字体 */
+            line-height: 1.2;
+        }
+        .tag-badge-admin .remove-tag-admin {
+            margin-left: 6px; /* 图标与文字间距 */
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2em; /* 使 "×" 更明显 */
+            line-height: 1;
+        }
+        .tag-badge-admin .remove-tag-admin:hover {
+            color: #343a40; /* 鼠标悬停时颜色变深 */
+        }
+        
+        /* 评论管理样式 */
+        .comment-item {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #fff;
+        }
+        .comment-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .comment-user-info {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+        }
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+        .comment-username {
+            font-weight: 500;
+            color: #495057;
+        }
+        .comment-date {
+            font-size: 0.85em;
+            color: #6c757d;
+        }
+        .comment-content {
+            margin-bottom: 10px;
+            line-height: 1.5;
+            color: #212529;
+        }
+        .comment-actions {
+            text-align: right;
+        }
+        .btn-delete-comment {
+            font-size: 0.8em;
+            padding: 4px 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="mb-4">
+            <h1 class="display-4">Prompt Market 管理系统</h1>
+            <p class="lead">审核和管理所有提交的 Prompt</p>
+            <div class="text-end mb-3">
+                <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> 退出登录
+                </button>
+            </div>
+        </header>        <!-- 统计信息 -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-box bg-pending">
+                    <h2 id="pendingCount">0</h2>
+                    <p>待审核</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-box bg-approved">
+                    <h2 id="approvedCount">0</h2>
+                    <p>已通过</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-box bg-rejected">
+                    <h2 id="rejectedCount">0</h2>
+                    <p>已拒绝</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-box bg-info text-white">
+                    <h2 id="dailyViews">0</h2>
+                    <p>今日浏览</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 浏览量统计区域 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">网站浏览量统计</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="text-center mb-4">
+                                    <h3 id="totalViews">0</h3>
+                                    <p class="text-muted">累计浏览量</p>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div id="viewsTrendChart" style="height: 200px;">
+                                    <!-- 这里将显示趋势图 -->
+                                    <div class="text-center py-5" id="chartPlaceholder">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">加载中...</span>
+                                        </div>
+                                        <p class="mt-2">加载趋势数据...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+                    待审核 <span class="badge bg-warning pending-count">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved" type="button" role="tab">
+                    已通过 <span class="badge bg-success approved-count">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="rejected-tab" data-bs-toggle="tab" data-bs-target="#rejected" type="button" role="tab">
+                    已拒绝 <span class="badge bg-danger rejected-count">0</span>
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="adminTabsContent">
+            <!-- 待审核标签页 -->
+            <div class="tab-pane fade show active" id="pending" role="tabpanel">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 以下是等待审核的 Prompt 列表
+                    <button class="btn btn-warning btn-sm float-end" id="rejectAllPendingBtn">一键全部拒绝</button>
+                </div>
+                <div id="pendingPrompts" class="prompt-container"></div>
+                <div id="pendingEmpty" class="text-center py-5 text-muted" style="display: none;">
+                    <i class="bi bi-inbox-fill" style="font-size: 3rem;"></i>
+                    <p class="mt-3">暂无待审核的 Prompt</p>
+                </div>
+            </div>
+
+            <!-- 已通过标签页 -->
+            <div class="tab-pane fade" id="approved" role="tabpanel">
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> 以下是已通过审核的 Prompt 列表
+                </div>
+                <div id="approvedPrompts" class="prompt-container"></div>
+                <div id="approvedEmpty" class="text-center py-5 text-muted" style="display: none;">
+                    <i class="bi bi-inbox-fill" style="font-size: 3rem;"></i>
+                    <p class="mt-3">暂无已通过的 Prompt</p>
+                </div>
+            </div>
+
+            <!-- 已拒绝标签页 -->
+            <div class="tab-pane fade" id="rejected" role="tabpanel">
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle"></i> 以下是已被拒绝的 Prompt 列表
+                    <button class="btn btn-danger btn-sm float-end" id="deleteAllRejectedBtn">一键全部删除</button>
+                </div>
+                <div id="rejectedPrompts" class="prompt-container"></div>
+                <div id="rejectedEmpty" class="text-center py-5 text-muted" style="display: none;">
+                    <i class="bi bi-inbox-fill" style="font-size: 3rem;"></i>
+                    <p class="mt-3">暂无已拒绝的 Prompt</p>
+                </div>
+            </div>
+        </div>
+    </div>    <!-- 确认操作模态框 -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalTitle">确认操作</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="confirmModalBody">
+                    <!-- 此处将动态填充内容 -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="confirmButton">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑Prompt模态框 -->
+    <div class="modal fade" id="editPromptModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑Prompt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 使用tab来分隔基本信息和评论管理 -->
+                    <ul class="nav nav-tabs" id="editTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="basic-info-tab" data-bs-toggle="tab" data-bs-target="#basic-info" type="button" role="tab">基本信息</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab">
+                                评论管理 <span class="badge bg-secondary ms-1" id="commentsCount">0</span>
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content mt-3" id="editTabsContent">
+                        <!-- 基本信息Tab -->
+                        <div class="tab-pane fade show active" id="basic-info" role="tabpanel">
+                            <form id="editPromptForm">
+                                <div class="mb-3">
+                                    <label for="editTitle" class="form-label">标题</label>
+                                    <input type="text" class="form-control" id="editTitle" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editDescription" class="form-label">描述</label>
+                                    <textarea class="form-control" id="editDescription" rows="2"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editContent" class="form-label">内容</label>
+                                    <textarea class="form-control" id="editContent" rows="10" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editTagsAdmin" class="form-label">标签 (按回车添加)</label>
+                                    <div class="tags-input-container-admin">
+                                        <input type="text" id="editTagsAdmin" class="form-control" placeholder="输入标签后按回车添加...">
+                                        <div class="tags-container-admin" id="editTagsContainerAdmin"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3 form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="editIsR18">
+                                    <label class="form-check-label" for="editIsR18">R18 内容</label>
+                                    <small class="text-muted d-block mt-1">选中此项表示此 Prompt 包含成人内容</small>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- 评论管理Tab -->
+                        <div class="tab-pane fade" id="comments" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">评论列表</h6>
+                                <small class="text-muted">管理员可以删除不合规的评论</small>
+                            </div>
+                            <div id="commentsContainer">
+                                <!-- 评论将在这里动态加载 -->
+                            </div>
+                            <div id="noComments" class="text-center py-4 text-muted" style="display: none;">
+                                <i class="bi bi-chat-dots" style="font-size: 3rem;"></i>
+                                <p class="mt-2">暂无评论</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="savePromptButton">保存更改</button>
+                </div>
+            </div>
+        </div>
+    </div>    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // 配置
+        const API_BASE_URL = '/api/v1/admin';
+          // 全局变量
+        let currentPromptId = null;
+        let currentAction = null;
+        let confirmModal = null;
+        let editPromptModal = null;
+        let currentEditingPrompt = null;
+        let currentAdminTags = []; // 用于存储当前编辑的标签
+        let viewsTrendChart = null; // 用于存储图表实例
+
+        // 状态映射
+        const STATUS_MAP = {
+            0: { name: '待审核', class: 'pending', container: 'pendingPrompts', emptyId: 'pendingEmpty' },
+            1: { name: '已通过', class: 'approved', container: 'approvedPrompts', emptyId: 'approvedEmpty' },
+            2: { name: '已拒绝', class: 'rejected', container: 'rejectedPrompts', emptyId: 'rejectedEmpty' }
+        };
+          // 初始化页面
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化模态框
+            confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            editPromptModal = new bootstrap.Modal(document.getElementById('editPromptModal'));
+            
+            // 设置确认按钮事件
+            document.getElementById('confirmButton').addEventListener('click', executeAction);
+            document.getElementById('savePromptButton').addEventListener('click', savePromptChanges);
+
+            // 新增：一键全部拒绝按钮事件
+            document.getElementById('rejectAllPendingBtn').addEventListener('click', () => {
+                showBatchConfirm('rejectAllPending');
+            });
+
+            // 新增：一键全部删除按钮事件
+            document.getElementById('deleteAllRejectedBtn').addEventListener('click', () => {
+                showBatchConfirm('deleteAllRejected');
+            });
+            
+            // 加载所有Prompt数据
+            loadAllPrompts();
+            
+            // 加载浏览量统计数据
+            loadViewsStats();
+
+            // 设置标签页切换事件
+            const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]')
+            tabEls.forEach(tabEl => {
+                tabEl.addEventListener('shown.bs.tab', event => {
+                    // 当切换到某个标签页时，可以在这里添加处理逻辑
+                })
+            });
+            // 初始化管理后台标签输入
+            initAdminTagInput(); 
+        });
+        
+        // 初始化管理后台标签输入功能
+        function initAdminTagInput() {
+            const tagInput = document.getElementById('editTagsAdmin');
+            tagInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const tagName = tagInput.value.trim();
+                    if (tagName && !currentAdminTags.includes(tagName) && currentAdminTags.length < 5) {
+                        currentAdminTags.push(tagName);
+                        renderAdminTags();
+                        tagInput.value = '';
+                    }
+                }
+            });
+        }
+
+        // 渲染管理后台标签列表
+        function renderAdminTags() {
+            const tagsContainer = document.getElementById('editTagsContainerAdmin');
+            tagsContainer.innerHTML = ''; // 清空现有标签
+            currentAdminTags.forEach(tagName => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'tag-badge-admin';
+                tagElement.textContent = tagName;
+                const removeIcon = document.createElement('span');
+                removeIcon.className = 'remove-tag-admin';
+                removeIcon.innerHTML = '&times;'; // 使用HTML实体表示 "×"
+                removeIcon.onclick = () => {
+                    currentAdminTags = currentAdminTags.filter(t => t !== tagName);
+                    renderAdminTags();
+                };
+                tagElement.appendChild(removeIcon);
+                tagsContainer.appendChild(tagElement);
+            });
+        }
+          // 加载所有Prompt数据
+        async function loadAllPrompts() {
+            try {
+                // 获取认证令牌
+                const token = localStorage.getItem('access_token');
+                const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+                
+                // 并行获取所有状态的Prompt
+                const [pendingResult, approvedResult, rejectedResult] = await Promise.all([
+                    fetch(`${API_BASE_URL}/prompts/?status=0`, { headers: authHeader }).then(r => {
+                        if(r.status === 401) { checkAuth(); return []; } 
+                        return r.json();
+                    }),
+                    fetch(`${API_BASE_URL}/prompts/?status=1`, { headers: authHeader }).then(r => {
+                        if(r.status === 401) { checkAuth(); return []; }
+                        return r.json();
+                    }),
+                    fetch(`${API_BASE_URL}/prompts/?status=2`, { headers: authHeader }).then(r => {
+                        if(r.status === 401) { checkAuth(); return []; }
+                        return r.json();
+                    })
+                ]);
+                
+                // 更新计数和显示
+                updatePromptsView(0, pendingResult);
+                updatePromptsView(1, approvedResult);
+                updatePromptsView(2, rejectedResult);
+                
+                // 更新统计信息
+                document.getElementById('pendingCount').textContent = pendingResult.length;
+                document.getElementById('approvedCount').textContent = approvedResult.length;
+                document.getElementById('rejectedCount').textContent = rejectedResult.length;
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                showError('无法加载数据，请检查网络连接并刷新页面');
+            }
+        }
+        
+        // 更新Prompt视图
+        function updatePromptsView(status, prompts) {
+            const statusInfo = STATUS_MAP[status];
+            const container = document.getElementById(statusInfo.container);
+            const emptyElement = document.getElementById(statusInfo.emptyId);
+            const countElements = document.querySelectorAll(`.${statusInfo.class}-count`);
+            
+            // 更新计数
+            countElements.forEach(el => el.textContent = prompts.length);
+            
+            // 清空容器
+            container.innerHTML = '';
+            
+            // 显示或隐藏空状态
+            if (prompts.length === 0) {
+                if (emptyElement) emptyElement.style.display = 'block';
+                return;
+            } else {
+                if (emptyElement) emptyElement.style.display = 'none';
+            }
+            
+            // 渲染每个Prompt
+            prompts.forEach(prompt => {
+                const promptCard = createPromptCard(prompt, status);
+                container.appendChild(promptCard);
+            });
+        }
+        
+        // 创建Prompt卡片
+        function createPromptCard(prompt, status) {
+            const statusInfo = STATUS_MAP[status];
+            const card = document.createElement('div');
+            card.className = `card prompt-card ${statusInfo.class} mb-3`;
+            card.id = `prompt-${prompt.id}`;
+            
+            // 创建标签HTML
+            const tagsHtml = prompt.tags.map(tag => 
+                `<span class="badge bg-info badge-tag">${tag.name}</span>`
+            ).join(' ');
+            
+            // 创建作者信息HTML
+            let authorHtml = '';
+            if (prompt.owner) {
+                const avatarUrl = prompt.owner.avatar_url || '/app/default-avatar.jpg';
+                const username = prompt.owner.username || '匿名用户';
+                authorHtml = `
+                    <div class="admin-author-info">
+                        <img src="${avatarUrl}" alt="${username}" class="admin-author-avatar" onerror="this.src='/app/default-avatar.jpg'">
+                        <span class="admin-author-name">${username}</span>
+                    </div>
+                `;
+            }
+            
+            // 创建操作按钮
+            let actionButtons = '';
+            if (status === 0) {
+                actionButtons = `
+                    <button class="btn btn-primary btn-sm me-2" onclick="showEditModal(${prompt.id})">
+                        <i class="bi bi-pencil"></i> 编辑
+                    </button>
+                    <button class="btn btn-success btn-sm me-2" onclick="showConfirm(${prompt.id}, 'approve')">
+                        <i class="bi bi-check-circle"></i> 通过
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="showConfirm(${prompt.id}, 'reject')">
+                        <i class="bi bi-x-circle"></i> 拒绝
+                    </button>
+                `;
+            } else if (status === 1) {
+                actionButtons = `
+                    <button class="btn btn-primary btn-sm me-2" onclick="showEditModal(${prompt.id})">
+                        <i class="bi bi-pencil"></i> 编辑
+                    </button>
+                    <button class="btn btn-warning btn-sm me-2" onclick="showConfirm(${prompt.id}, 'revert')">
+                        <i class="bi bi-arrow-counterclockwise"></i> 撤回
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="showConfirm(${prompt.id}, 'delete')">
+                        <i class="bi bi-trash"></i> 删除
+                    </button>
+                `;
+            } else {
+                actionButtons = `
+                    <button class="btn btn-warning btn-sm me-2" onclick="showConfirm(${prompt.id}, 'revert')">
+                        <i class="bi bi-arrow-counterclockwise"></i> 撤回
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="showConfirm(${prompt.id}, 'delete')">
+                        <i class="bi bi-trash"></i> 删除
+                    </button>
+                `;
+            }
+            
+            // 格式化时间
+            const createdAt = new Date(prompt.created_at).toLocaleString();
+            // 格式化内容预览（最多显示100个字符）
+            const contentPreview = prompt.content.length > 100 ? 
+                prompt.content.substring(0, 100) + '...' : 
+                prompt.content;
+            
+            card.innerHTML = `
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        ${prompt.title}
+                        ${prompt.is_r18 ? '<span class="badge bg-danger ms-1" style="font-size: 0.7em;">R18</span>' : ''}
+                    </h5>
+                    <span class="badge bg-secondary">ID: ${prompt.id}</span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <p class="mb-1">${prompt.description || '<em>无描述</em>'}</p>
+                            <span class="details-toggle text-primary" onclick="toggleDetails(${prompt.id})">
+                                <i class="bi bi-chevron-down" id="toggle-icon-${prompt.id}"></i> 详情
+                            </span>
+                        </div>
+                        
+                        ${authorHtml}
+                        
+                        <div class="prompt-details" id="details-${prompt.id}">
+                            <div class="mb-3">
+                                <h6 class="card-subtitle mb-2 text-muted">内容</h6>
+                                <pre class="prompt-content">${prompt.content}</pre>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <h6 class="card-subtitle mb-2 text-muted">标签</h6>
+                                ${tagsHtml || '<em>无标签</em>'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div>
+                            <small class="text-muted">创建时间: ${createdAt}</small>
+                        </div>
+                        <div class="prompt-actions">
+                            ${actionButtons}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+          // 切换显示详情
+        function toggleDetails(promptId) {
+            const detailsElement = document.getElementById(`details-${promptId}`);
+            const iconElement = document.getElementById(`toggle-icon-${promptId}`);
+            
+            if (detailsElement.style.display === 'block') {
+                detailsElement.style.display = 'none';
+                iconElement.className = 'bi bi-chevron-down';
+            } else {
+                detailsElement.style.display = 'block';
+                iconElement.className = 'bi bi-chevron-up';
+            }
+        }
+        
+        // 暴露到全局，以便HTML中的onclick能够调用
+        window.toggleDetails = toggleDetails;
+        
+        // 显示确认对话框
+        function showConfirm(promptId, action) {
+            currentPromptId = promptId;
+            currentAction = action;
+            
+            // 设置标题和消息
+            const title = document.getElementById('confirmModalTitle');
+            const body = document.getElementById('confirmModalBody');
+            const button = document.getElementById('confirmButton');
+            
+            let actionText = '';
+            button.className = 'btn btn-primary';
+            
+            switch(action) {
+                case 'approve':
+                    actionText = '通过';
+                    title.textContent = '确认通过';
+                    button.className = 'btn btn-success';
+                    break;
+                case 'reject':
+                    actionText = '拒绝';
+                    title.textContent = '确认拒绝';
+                    button.className = 'btn btn-warning';
+                    break;
+                case 'revert':
+                    actionText = '撤回到待审核';
+                    title.textContent = '确认撤回';
+                    button.className = 'btn btn-warning';
+                    break;
+                case 'delete':
+                    actionText = '删除';
+                    title.textContent = '确认删除';
+                    button.className = 'btn btn-danger';
+                    break;
+            }
+            
+            body.innerHTML = `<p>您确定要<strong>${actionText}</strong> ID 为 <strong>${promptId}</strong> 的 Prompt 吗？</p>
+                             ${action === 'delete' ? '<p class="text-danger"><strong>警告：</strong>此操作无法撤销!</p>' : ''}`;
+            
+            confirmModal.show();
+        }
+          // 显示批量操作确认对话框
+        function showBatchConfirm(actionType) {
+            currentAction = actionType; // 设置当前操作类型，用于 executeBatchAction
+            const title = document.getElementById('confirmModalTitle');
+            const body = document.getElementById('confirmModalBody');
+            const button = document.getElementById('confirmButton');
+            let actionText = '';
+
+            if (actionType === 'rejectAllPending') {
+                actionText = '拒绝所有待审核的 Prompt';
+                title.textContent = '确认全部拒绝';
+                body.innerHTML = `<p>您确定要<strong>${actionText}</strong>吗？此操作会将所有待审核的Prompt移至已拒绝列表。</p>`;
+                button.className = 'btn btn-warning';
+            } else if (actionType === 'deleteAllRejected') {
+                actionText = '删除所有已拒绝的 Prompt';
+                title.textContent = '确认全部删除';
+                body.innerHTML = `<p>您确定要<strong>${actionText}</strong>吗？<strong class=\'text-danger\'>警告：此操作无法撤销!</strong></p>`;
+                button.className = 'btn btn-danger';
+            }
+            confirmModal.show();
+        }
+
+        // 执行操作 (修改以包含批量操作)
+        async function executeAction() {
+            if (!currentAction) return;
+
+            if (currentAction === 'rejectAllPending' || currentAction === 'deleteAllRejected') {
+                await executeBatchAction();
+            } else if (currentPromptId) {
+                await executeSingleAction();
+            }
+        }
+
+        // 新增：解析错误响应
+        async function parseErrorResponse(response) {
+            try {
+                const errorData = await response.json();
+                if (errorData && errorData.detail) {
+                    if (typeof errorData.detail === 'string') {
+                        return errorData.detail;
+                    }
+                    // If detail is an array (e.g., FastAPI validation errors) or object, stringify it.
+                    return JSON.stringify(errorData.detail, null, 2); // null, 2 for pretty print
+                }
+                // Fallback if .detail is not present or errorData is not as expected
+                let responseText = '';
+                try {
+                    responseText = await response.text();
+                } catch (textError) {
+                    // ignore if can't get text
+                }
+                return `服务器返回 ${response.status} ${response.statusText}. ${responseText || '无法获取详细错误内容.'}`;
+            } catch (e) {
+                // If response.json() itself fails
+                let responseText = '';
+                try {
+                    responseText = await response.text(); // Try to get raw text
+                } catch (textError) {
+                    // ignore
+                }
+                return `服务器返回 ${response.status} ${response.statusText}. 无法解析响应内容. ${responseText || ''}`;
+            }
+        }
+
+        // 执行单个Prompt操作（原executeAction逻辑）
+        async function executeSingleAction() {
+            if (!currentPromptId || !currentAction) return;
+            try {
+                let url = '';
+                let method = '';
+                
+                // 获取认证令牌
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    checkAuth();
+                    return;
+                }
+                  // 根据操作类型设置URL和方法
+                switch(currentAction) {
+                    case 'approve':
+                        url = `${API_BASE_URL}/prompts/${currentPromptId}/approve`;
+                        method = 'PUT';
+                        break;
+                    case 'reject':
+                        url = `${API_BASE_URL}/prompts/${currentPromptId}/reject`;
+                        method = 'PUT';
+                        break;
+                    case 'revert':
+                        url = `${API_BASE_URL}/prompts/${currentPromptId}/revert`;
+                        method = 'PUT';
+                        break;
+                    case 'delete':
+                        url = `${API_BASE_URL}/prompts/${currentPromptId}`;
+                        method = 'DELETE';
+                        break;
+                    default: // 如果不是已知的单个操作，则退出
+                        confirmModal.hide();
+                        return;
+                }
+                  // 发送请求
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    // throw new Error(`服务器返回 ${response.status} ${response.statusText}`); // 旧的错误处理
+                    const errorMessage = await parseErrorResponse(response); // 使用新的错误解析
+                    throw new Error(errorMessage);
+                }
+                
+                // 隐藏模态框
+                confirmModal.hide();
+                  // 显示成功消息
+                let actionName = '';
+                switch(currentAction) {
+                    case 'approve': actionName = '通过'; break;
+                    case 'reject': actionName = '拒绝'; break;
+                    case 'revert': actionName = '撤回到待审核'; break;
+                    case 'delete': actionName = '删除'; break;
+                }
+                
+                showSuccess(`操作成功: ID为 ${currentPromptId} 的 Prompt 已${actionName}`);
+                
+                // 重新加载数据
+                loadAllPrompts();
+                
+            } catch (error) {
+                console.error('执行操作失败:', error);
+                showError(`操作失败: ${error.message}`); // error.message 现在是更详细的字符串
+                confirmModal.hide();
+            }
+        }
+
+        // 新增：执行批量操作
+        async function executeBatchAction() {
+            if (!currentAction) return;
+            
+            try {
+                let url = '';
+                let method = '';
+                let successMessage = '';
+
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    checkAuth();
+                    return;
+                }
+
+                if (currentAction === 'rejectAllPending') {
+                    url = `${API_BASE_URL}/prompts/reject-all-pending`;
+                    method = 'PUT';
+                } else if (currentAction === 'deleteAllRejected') {
+                    url = `${API_BASE_URL}/prompts/delete-all-rejected`;
+                    method = 'DELETE';
+                }
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    // const errorData = await response.json().catch(() => ({ detail: `服务器返回 ${response.status} ${response.statusText}` }); // 旧的错误处理
+                    // throw new Error(errorData.detail || `服务器返回 ${response.status}`); // 旧的错误处理
+                    const errorMessage = await parseErrorResponse(response); // 使用新的错误解析
+                    throw new Error(errorMessage);
+                }
+
+                const result = await response.json();
+                successMessage = result.message || '批量操作成功完成';
+
+                confirmModal.hide();
+                showSuccess(successMessage);
+                loadAllPrompts();
+
+            } catch (error) {
+                console.error('执行批量操作失败:', error);
+                showError(`批量操作失败: ${error.message}`); // error.message 现在是更详细的字符串
+                confirmModal.hide();
+            }
+        }
+        
+        // 显示成功消息
+        function showSuccess(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show fixed-bottom m-3';
+            alertDiv.role = 'alert';
+            alertDiv.innerHTML = `
+                <i class="bi bi-check-circle-fill me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // 5秒后自动删除
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+        
+        // 显示错误消息
+        function showError(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show fixed-bottom m-3';
+            alertDiv.role = 'alert';
+            alertDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // 5秒后自动删除
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }        // 将上面定义的showConfirm函数暴露到全局
+        window.showConfirm = showConfirm;
+        
+        // 检查用户是否已登录
+        function checkAuth() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                // 如果没有token，重定向到登录页面
+                window.location.href = '/admin/login.html';
+            }
+        }
+          // 处理登出
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('token_type');
+            window.location.href = '/admin/login.html';
+        });
+        
+        // 显示编辑模态框
+        async function showEditModal(promptId) {
+            try {
+                // 获取认证令牌
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    checkAuth();
+                    return;
+                }
+                
+                // 获取prompt详情
+                const response = await fetch(`${API_BASE_URL}/prompts/${promptId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`获取数据失败: ${response.status}`);
+                }
+                
+                const prompt = await response.json();
+                currentEditingPrompt = prompt;
+                currentPromptId = prompt.id;
+                  // 填充表单
+                document.getElementById('editTitle').value = prompt.title;
+                document.getElementById('editDescription').value = prompt.description || '';
+                document.getElementById('editContent').value = prompt.content;
+                
+                // 设置R18开关
+                document.getElementById('editIsR18').checked = prompt.is_r18 === 1;
+                
+                // 填充标签
+                currentAdminTags = prompt.tags.map(tag => tag.name);
+                renderAdminTags();
+                document.getElementById('editTagsAdmin').value = ''; // 清空输入框
+                
+                // 显示评论
+                displayComments(prompt.comments || []);
+                
+                // 显示模态框
+                editPromptModal.show();
+            } catch (error) {
+                console.error('加载prompt数据失败:', error);
+                showError(`无法加载数据: ${error.message}`);
+            }
+        }
+        
+        // 显示评论列表
+        function displayComments(comments) {
+            const commentsContainer = document.getElementById('commentsContainer');
+            const commentsCount = document.getElementById('commentsCount');
+            const noComments = document.getElementById('noComments');
+            
+            // 更新评论数量
+            commentsCount.textContent = comments.length;
+            
+            if (comments.length === 0) {
+                commentsContainer.innerHTML = '';
+                noComments.style.display = 'block';
+                return;
+            }
+            
+            noComments.style.display = 'none';
+            commentsContainer.innerHTML = '';
+            
+            comments.forEach(comment => {
+                const commentElement = createCommentElement(comment);
+                commentsContainer.appendChild(commentElement);
+            });
+        }
+        
+        // 创建评论元素
+        function createCommentElement(comment) {
+            const commentDiv = document.createElement('div');
+            commentDiv.className = 'comment-item';
+            commentDiv.setAttribute('data-comment-id', comment.id);
+            
+            // 格式化时间
+            const createdAt = new Date(comment.created_at);
+            const formattedDate = createdAt.toLocaleString('zh-CN');
+            
+            // 获取用户信息
+            const user = comment.user || {};
+            const username = user.username || '匿名用户';
+            const avatarUrl = user.avatar_url || '/app/static/default-avatar.svg';
+            
+            commentDiv.innerHTML = `
+                <div class="comment-header">
+                    <div class="comment-user-info">
+                        <img src="${escapeHTML(avatarUrl)}" alt="${escapeHTML(username)}" class="comment-avatar" onerror="this.src='/app/static/default-avatar.svg'">
+                        <span class="comment-username">${escapeHTML(username)}</span>
+                    </div>
+                    <div class="comment-date">${formattedDate}</div>
+                </div>
+                <div class="comment-content">${escapeHTML(comment.content)}</div>
+                <div class="comment-actions">
+                    <button class="btn btn-danger btn-sm btn-delete-comment" onclick="deleteComment(${comment.id})">
+                        <i class="bi bi-trash"></i> 删除
+                    </button>
+                </div>
+            `;
+            
+            return commentDiv;
+        }
+        
+        // 删除评论
+        async function deleteComment(commentId) {
+            if (!confirm('确定要删除这条评论吗？此操作无法撤销。')) {
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    checkAuth();
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`删除失败: ${response.status}`);
+                }
+                
+                // 从DOM中移除评论元素
+                const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+                if (commentElement) {
+                    commentElement.remove();
+                    
+                    // 更新评论计数
+                    const commentsContainer = document.getElementById('commentsContainer');
+                    const remainingComments = commentsContainer.children.length;
+                    document.getElementById('commentsCount').textContent = remainingComments;
+                    
+                    // 如果没有评论了，显示空状态
+                    if (remainingComments === 0) {
+                        document.getElementById('noComments').style.display = 'block';
+                    }
+                }
+                
+                showSuccess('评论已删除');
+            } catch (error) {
+                console.error('删除评论失败:', error);
+                showError(`删除评论失败: ${error.message}`);
+            }
+        }
+        
+        // HTML转义函数
+        function escapeHTML(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // 保存prompt更改
+        async function savePromptChanges() {
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    checkAuth();
+                    return;
+                }
+                  // 获取表单数据
+                const updatedPrompt = {
+                    title: document.getElementById('editTitle').value,
+                    description: document.getElementById('editDescription').value,
+                    content: document.getElementById('editContent').value,
+                    tags: currentAdminTags, // 使用 currentAdminTags 存储的标签
+                    is_r18: document.getElementById('editIsR18').checked ? 1 : 0 // 设置R18状态
+                };
+                
+                // 验证表单
+                if (!updatedPrompt.title || !updatedPrompt.content) {
+                    showError('标题和内容不能为空');
+                    return;
+                }
+                  // 发送更新请求
+                const response = await fetch(`${API_BASE_URL}/prompts/${currentPromptId}/update`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updatedPrompt)
+                });
+                
+                if (!response.ok) {
+                    const errorMessage = await parseErrorResponse(response);
+                    throw new Error(errorMessage);
+                }
+                
+                // 隐藏模态框
+                editPromptModal.hide();
+                
+                // 显示成功消息
+                showSuccess(`Prompt ID ${currentPromptId} 已成功更新`);
+                
+                // 重新加载数据
+                loadAllPrompts();
+            } catch (error) {
+                console.error('更新prompt失败:', error);
+                showError(`更新失败: ${error.message}`);
+            }
+        }
+        
+        // 暴露编辑函数到全局
+        window.showEditModal = showEditModal;
+        
+        // 在页面加载时检查认证状态
+        checkAuth();
+
+        // 加载浏览量统计数据
+        async function loadViewsStats() {
+            try {
+                // 获取认证令牌
+                const token = localStorage.getItem('access_token');
+                const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+                
+                // 获取浏览量统计数据
+                const response = await fetch(`${API_BASE_URL}/stats/views`, { headers: authHeader });
+                
+                if (response.status === 401) {
+                    checkAuth();
+                    return;
+                }
+                
+                if (!response.ok) {
+                    throw new Error('获取浏览量统计失败');
+                }
+                
+                const statsData = await response.json();
+                
+                // 更新页面显示
+                document.getElementById('dailyViews').textContent = statsData.daily_views.toLocaleString();
+                document.getElementById('totalViews').textContent = statsData.total_views.toLocaleString();
+                
+                // 渲染趋势图
+                renderViewsTrendChart(statsData.weekly_trend);
+                
+            } catch (error) {
+                console.error('加载浏览量统计失败:', error);
+                document.getElementById('chartPlaceholder').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> 加载趋势数据失败，请刷新页面重试
+                    </div>
+                `;
+            }
+        }
+        
+        // 渲染浏览量趋势图
+        function renderViewsTrendChart(trendData) {
+            const chartPlaceholder = document.getElementById('chartPlaceholder');
+            chartPlaceholder.style.display = 'none';
+            
+            const canvas = document.createElement('canvas');
+            canvas.id = 'viewsChart';
+            document.getElementById('viewsTrendChart').appendChild(canvas);
+            
+            const ctx = canvas.getContext('2d');
+            
+            // 准备图表数据
+            const dates = trendData.map(item => {
+                const date = new Date(item.date);
+                return `${date.getMonth() + 1}/${date.getDate()}`; // 格式化为 月/日
+            });
+            
+            const views = trendData.map(item => item.views);
+            
+            // 创建图表
+            viewsTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: '日浏览量',
+                        data: views,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '过去7天浏览量趋势'
+                        },
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '浏览量'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '日期'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
