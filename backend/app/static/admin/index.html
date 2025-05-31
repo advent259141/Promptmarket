@@ -1297,11 +1297,11 @@
             // 创建作者信息HTML
             let authorHtml = '';
             if (prompt.owner) {
-                const avatarUrl = prompt.owner.avatar_url || '/app/default-avatar.jpg';
+                const avatarUrl = prompt.owner.avatar_url || '/assets/images/default-avatar.jpg';
                 const username = prompt.owner.username || '匿名用户';
                 authorHtml = `
                     <div class="admin-author-info">
-                        <img src="${avatarUrl}" alt="${username}" class="admin-author-avatar" onerror="this.src='/app/default-avatar.jpg'">
+                        <img src="${avatarUrl}" alt="${username}" class="admin-author-avatar" onerror="this.src='/assets/images/default-avatar.jpg'">
                         <span class="admin-author-name">${username}</span>
                     </div>
                 `;
@@ -1805,12 +1805,12 @@
             // 获取用户信息
             const user = comment.user || {};
             const username = user.username || '匿名用户';
-            const avatarUrl = user.avatar_url || '/app/default-avatar.jpg';
+            const avatarUrl = user.avatar_url || '/assets/images/default-avatar.jpg';
             
             commentDiv.innerHTML = `
                 <div class="comment-header">
                     <div class="comment-user-info">
-                        <img src="${escapeHTML(avatarUrl)}" alt="${escapeHTML(username)}" class="comment-avatar" onerror="this.src='/app/default-avatar.jpg'">
+                        <img src="${escapeHTML(avatarUrl)}" alt="${escapeHTML(username)}" class="comment-avatar" onerror="this.src='/assets/images/default-avatar.jpg'">
                         <span class="comment-username">${escapeHTML(username)}</span>
                     </div>
                     <div class="comment-date">${formattedDate}</div>
@@ -2553,7 +2553,7 @@
                 navigateToUserProfile(user.id, user.username);
             });
 
-            const avatarUrl = user.avatar_url || '/app/default-avatar.jpg';
+            const avatarUrl = user.avatar_url || '/assets/images/default-avatar.jpg';
             const joinDate = new Date(user.created_at).toLocaleDateString('zh-CN');
             
             // OAuth提供商徽章
@@ -2576,7 +2576,7 @@
                     <img src="${escapeHTML(avatarUrl)}" 
                          alt="${escapeHTML(user.username)}" 
                          class="user-avatar-large me-3"
-                         onerror="this.src='/app/default-avatar.jpg'">
+                         onerror="this.src='/assets/images/default-avatar.jpg'">
                     <div class="user-info-section">
                         <div class="d-flex align-items-center mb-1">
                             <h6 class="card-title mb-0 me-2">${escapeHTML(user.username)}</h6>
