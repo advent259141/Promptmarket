@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>滚动条测试 - 私信功能</title>
+    <link rel="stylesheet" href="/src/styles/themes/color-schemes.css">
+    <link rel="stylesheet" href="/src/styles/main/styles.css">
+    <link rel="stylesheet" href="/src/styles/components/private-messages.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* 测试样式 - 模拟大量内容 */
+        .test-message {
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .test-conversation {
+            padding: 0.75rem 1rem;
+            margin-bottom: 1px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+        .test-conversation:hover {
+            background: var(--accent-bg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航栏 -->
+        <header class="messages-header">
+            <div class="header-left">
+                <button class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    返回主页
+                </button>
+                <h1 class="page-title">
+                    <i class="fas fa-envelope"></i>
+                    滚动条测试
+                </h1>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <img class="user-avatar" src="default-avatar.jpg" alt="用户头像">
+                    <span>测试用户</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main class="messages-main">
+            <!-- 左侧对话列表 -->
+            <div class="conversations-panel">
+                <!-- 消息类型标签页 -->
+                <div class="message-tabs">
+                    <button class="tab-btn active">
+                        <i class="fas fa-comment"></i>
+                        私信
+                        <span class="tab-badge">15</span>
+                    </button>
+                    <button class="tab-btn">
+                        <i class="fas fa-bell"></i>
+                        通知
+                        <span class="tab-badge">5</span>
+                    </button>
+                </div>
+                
+                <div class="conversations-header">
+                    <h2>
+                        <i class="fas fa-comments"></i>
+                        对话列表
+                    </h2>
+                </div>
+                
+                <!-- 对话列表 -->
+                <div class="tab-content active">
+                    <div class="conversations-list">
+                        <!-- 生成15个测试对话 -->
+                        <script>
+                            document.write(Array.from({length: 15}, (_, i) => `
+                                <div class="test-conversation">
+                                    <strong>用户${i + 1}</strong><br>
+                                    <small>这是第${i + 1}条测试消息内容，用于测试滚动条功能...</small>
+                                </div>
+                            `).join(''));
+                        </script>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧聊天区域 -->
+            <div class="chat-panel">
+                <!-- 聊天区域 -->
+                <div class="chat-area" style="display: flex;">
+                    <!-- 聊天头部 -->
+                    <div class="chat-header">
+                        <div class="chat-user-info">
+                            <img class="chat-user-avatar" src="default-avatar.jpg" alt="对方头像">
+                            <div class="chat-user-details">
+                                <h3>测试用户</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 消息区域 -->
+                    <div class="messages-container">
+                        <!-- 生成15条测试消息 -->
+                        <script>
+                            document.write(Array.from({length: 15}, (_, i) => `
+                                <div class="test-message">
+                                    <strong>消息 ${i + 1}</strong><br>
+                                    这是第${i + 1}条测试消息，用于测试当消息数量超过11条时，输入框是否会被挤出屏幕。现在应该有滚动条来处理这个问题。
+                                    ${i % 3 === 0 ? '<br><br>这是一条比较长的消息，包含多行内容。<br>第二行内容。<br>第三行内容。' : ''}
+                                </div>
+                            `).join(''));
+                        </script>
+                    </div>
+
+                    <!-- 消息输入区域 -->
+                    <div class="message-input-area">
+                        <div class="input-container">
+                            <textarea 
+                                placeholder="输入消息... (这个输入框应该始终可见)" 
+                                rows="1"
+                                maxlength="1000"
+                                style="flex: 1; border: 1px solid var(--border-color); border-radius: 20px; padding: 0.75rem 1rem; font-family: inherit; font-size: 0.9rem; background: var(--input-bg); color: var(--text-color); resize: none; max-height: 120px;"
+                            ></textarea>
+                            <button class="send-btn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <div class="input-footer">
+                            <span class="char-count">0/1000</span>
+                            <span class="send-hint">按 Ctrl+Enter 发送</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

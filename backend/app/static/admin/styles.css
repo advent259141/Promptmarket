@@ -1,0 +1,39 @@
+/* 管理面板作者信息样式 */
+.author-info-admin {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 8px 12px;
+    border-left: 3px solid #007bff;
+}
+
+.author-avatar-admin {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-right: 8px;
+    border: 1px solid #ddd;
+    object-fit: cover;
+}
+
+.author-name-admin {
+    font-weight: 500;
+    color: #495057;
+    margin-right: 6px;
+}
+
+/* 确保作者信息在卡片中有适当的间距 */
+.card-body .author-info-admin {
+    margin-bottom: 12px;
+}
+
+/* 模态框中的作者头像样式 */
+.author-avatar-modal {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    object-fit: cover;
+} 

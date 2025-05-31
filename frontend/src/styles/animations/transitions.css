@@ -1,0 +1,88 @@
+/* 页面过渡动画 */
+.active-section {
+    opacity: 0;
+    animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 页面加载动画 */
+body {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+body.page-loaded {
+    opacity: 1;
+}
+
+/* 容器初始动画 */
+.container.animate-in {
+    animation: containerFadeIn 0.8s ease-out forwards;
+}
+
+@keyframes containerFadeIn {
+    from { 
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 头部元素动画 */
+.container.animate-in header {
+    opacity: 0;
+    animation: headerSlideDown 0.8s ease forwards 0.2s;
+}
+
+@keyframes headerSlideDown {
+    from { 
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 页面切换动画 */
+#browse-section.active-section {
+    animation: slideInFromLeft 0.4s ease forwards;
+}
+
+#upload-section.active-section {
+    animation: slideInFromRight 0.4s ease forwards;
+}
+
+@keyframes slideInFromLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInFromRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* 卡片加载动画 */
+.prompt-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: cardFadeIn 0.4s ease forwards;
+}
+
+@keyframes cardFadeIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 卡片的交错加载效果 */
+.prompt-card:nth-child(3n+1) { animation-delay: 0.1s; }
+.prompt-card:nth-child(3n+2) { animation-delay: 0.2s; }
+.prompt-card:nth-child(3n+3) { animation-delay: 0.3s; }

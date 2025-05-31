@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>私信 - Prompt市场</title>    <!-- 样式表 -->
+    <link rel="stylesheet" href="/src/styles/themes/color-schemes.css">
+    <link rel="stylesheet" href="/src/styles/main/styles.css">
+    <link rel="stylesheet" href="/src/styles/components/private-messages.css">
+    <link rel="stylesheet" href="/src/styles/components/toast.css">
+    <!-- 引入Font Awesome图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- 添加网站图标 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航栏 -->
+        <header class="messages-header">
+            <div class="header-left">
+                <button id="back-btn" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    返回主页
+                </button>                <h1 class="page-title">
+                    <i class="fas fa-envelope"></i>
+                    站内信
+                </h1>
+            </div>            <div class="header-right">
+                <div id="user-info" class="user-info">
+                    <img id="user-avatar" class="user-avatar" src="/assets/images/default-avatar.jpg" alt="用户头像">
+                    <span id="user-name">用户</span>
+                </div>
+                <button id="logout-btn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    退出
+                </button>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main class="messages-main">            <!-- 左侧对话列表 -->
+            <div class="conversations-panel">
+                <!-- 消息类型标签页 -->
+                <div class="message-tabs">
+                    <button class="tab-btn active" data-tab="private-messages">
+                        <i class="fas fa-comment"></i>
+                        私信
+                        <span class="tab-badge" id="private-message-badge" style="display: none;">0</span>
+                    </button>
+                    <button class="tab-btn" data-tab="notifications">
+                        <i class="fas fa-bell"></i>
+                        通知
+                        <span class="tab-badge" id="notification-badge" style="display: none;">0</span>
+                    </button>
+                </div>
+                
+                <div class="conversations-header">
+                    <h2 id="list-title">
+                        <i class="fas fa-comments"></i>
+                        对话列表
+                    </h2>
+                    <div class="header-actions">
+                        <button id="mark-all-read-btn" class="mark-all-read-btn" style="display: none;">
+                            <i class="fas fa-check-double"></i>
+                            全部已读
+                        </button>
+                        <div class="unread-badge" id="total-unread-badge" style="display: none;">
+                            <span id="total-unread-count">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 私信对话列表 -->
+                <div class="tab-content active" id="private-messages-content">
+                    <div class="conversations-list" id="conversations-list">
+                        <!-- 对话列表将通过JavaScript动态生成 -->
+                        <div class="no-conversations" id="no-conversations">
+                            <i class="fas fa-comment-slash"></i>
+                            <p>暂无对话</p>
+                            <p class="hint">发送第一条私信开始聊天吧！</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 通知列表 -->
+                <div class="tab-content" id="notifications-content">
+                    <div class="notifications-list" id="notifications-list">
+                        <!-- 通知列表将通过JavaScript动态生成 -->
+                        <div class="no-notifications" id="no-notifications">
+                            <i class="fas fa-bell-slash"></i>
+                            <p>暂无通知</p>
+                            <p class="hint">系统通知将在这里显示</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧聊天区域 -->
+            <div class="chat-panel">                <div class="chat-welcome" id="chat-welcome">
+                    <div class="welcome-content">
+                        <i class="fas fa-envelope-open"></i>
+                        <h3>欢迎使用站内信功能</h3>
+                        <p>选择左侧的对话开始聊天，或查看系统通知</p>
+                    </div>
+                </div>
+
+                <!-- 通知详情区域 -->
+                <div class="notification-detail" id="notification-detail" style="display: none;">
+                    <div class="notification-header">
+                        <div class="notification-info">
+                            <h3 id="notification-title">通知标题</h3>
+                            <div class="notification-meta">
+                                <span id="notification-type" class="notification-type-badge">系统</span>
+                                <span id="notification-date" class="notification-date">2024-01-01 10:00</span>
+                            </div>
+                        </div>
+                        <button id="close-notification-btn" class="close-chat-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="notification-content" id="notification-content">
+                        <!-- 通知内容 -->
+                    </div>
+                </div>
+
+                <!-- 聊天区域 -->
+                <div class="chat-area" id="chat-area" style="display: none;">
+                    <!-- 聊天头部 -->
+                    <div class="chat-header">
+                        <div class="chat-user-info">
+                            <img id="chat-user-avatar" class="chat-user-avatar" src="/app/default-avatar.jpg" alt="对方头像">
+                            <div class="chat-user-details">
+                                <h3 id="chat-user-name">用户名</h3>
+                            </div>
+                        </div>
+                        <button id="close-chat-btn" class="close-chat-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <!-- 消息区域 -->
+                    <div class="messages-container" id="messages-container">
+                        <!-- 消息将通过JavaScript动态生成 -->
+                    </div>
+
+                    <!-- 消息输入区域 -->
+                    <div class="message-input-area">
+                        <div class="input-container">
+                            <textarea 
+                                id="message-input" 
+                                placeholder="输入消息..." 
+                                rows="1"
+                                maxlength="1000"
+                            ></textarea>
+                            <button id="send-message-btn" class="send-btn" disabled>
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <div class="input-footer">
+                            <span class="char-count">
+                                <span id="char-count">0</span>/1000
+                            </span>
+                            <span class="send-hint">
+                                按 Ctrl+Enter 发送
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>加载中...</p>
+        </div>
+    </div>
+
+    <!-- Toast通知 -->
+    <div id="toast" class="toast"></div>    <!-- 私信JavaScript -->
+    <script src="/src/scripts/private-messages.js"></script>
+</body>
+</html>
