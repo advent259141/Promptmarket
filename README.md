@@ -1,6 +1,31 @@
 # Prompt Market 项目文档
 
-## 🚀 快速启动
+## ⚡ 快速开始
+
+如果你想快速启动项目，执行以下命令：
+
+```bash
+# 1. 克隆项目（如果尚未克隆）
+git clone <your-repo-url>
+cd prompt_market
+
+# 2. 安装依赖
+cd backend
+pip install -r requirements.txt
+
+# 3. 配置环境变量
+cp .env.example .env
+# 编辑 .env 文件，至少设置 SECRET_KEY 和 DATABASE_URL
+
+# 4. 启动服务
+python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+访问 `http://localhost:8000` 开始使用！
+
+---
+
+## 🚀 详细配置指南
 
 ### 1. 环境准备
 ```bash
@@ -13,7 +38,72 @@ cp .env.example .env
 # 编辑 .env 文件，配置数据库连接等信息
 ```
 
-### 2. 数据库设置
+### 2. 环境变量配置
+
+#### 必需配置项
+
+复制示例配置文件：
+```bash
+cp .env.example .env
+```
+
+编辑 `.env` 文件，配置以下**必需**项目：
+
+##### 应用安全密钥（必需）
+```env
+# 用于 JWT 令牌签名和会话加密
+SECRET_KEY=your_secret_key_here_change_in_production
+```
+⚠️ **安全提示**: 生产环境请使用强随机密钥，可以使用以下命令生成：
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+##### 数据库配置（必需）
+
+**MySQL（生产环境推荐）**
+```env
+DATABASE_URL=mysql+aiomysql://username:password@localhost:3306/prompt_market_db
+```
+
+##### JWT 令牌过期时间
+```env
+ACCESS_TOKEN_EXPIRE_MINUTES=1440  # 24小时
+```
+
+#### 可选配置项
+
+##### GitHub OAuth 登录（可选）
+如需支持 GitHub 登录，请配置：
+```env
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+GITHUB_REDIRECT_URI=http://localhost:8000/api/v1/auth/github/callback
+```
+
+如何获取 GitHub OAuth 配置：
+1. 访问 [GitHub Developer Settings](https://github.com/settings/applications/new)
+2. 创建新的 OAuth App
+3. 设置 Authorization callback URL 为: `http://localhost:8000/api/v1/auth/github/callback`
+4. 获取 Client ID 和 Client Secret
+
+##### AI API 配置（可选）
+```env
+# Kimi API
+KIMI_API_KEY=your_kimi_api_key
+
+# Google Gemini API
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-pro
+```
+
+#### 配置验证
+启动应用前，确保以下配置正确：
+- ✅ `SECRET_KEY` 已设置且不为空
+- ✅ `DATABASE_URL` 指向有效的数据库
+- ✅ 如果使用 MySQL，确保数据库已创建且用户有权限
+
+### 3. 数据库设置
 项目使用 MySQL 数据库，详细配置请参考 [MySQL 设置指南](./MYSQL_SETUP.md)
 
 ### 3. 启动服务
